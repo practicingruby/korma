@@ -10,8 +10,7 @@ module Korma
     TITLE  = "Ruby Best Practices"
     DOMAIN = "localhost:4567"
     DESCRIPTION = "Not really implemented yet"
-    AUTHORS = { "gregory" => "Gregory Brown",
-                "chenoa"  => "Chenoa Siegenthaler" }
+
 
     class Entry 
       def initialize(blob, author="")
@@ -39,7 +38,7 @@ module Korma
     end
 
     extend self 
-    attr_accessor :repository
+    attr_accessor :repository, :authors
 
     def normalize_path(path)
       path.gsub(%r{/+},"/")
@@ -146,4 +145,5 @@ end
 
 configure do
   Korma::Blog.repository = Grit::Repo.new(ARGV[0])
+  Korma::Blog.authors    = YAML.load((Korma::Blog.repository / "authors.yml").data)
 end
