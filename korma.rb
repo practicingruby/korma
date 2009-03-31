@@ -18,7 +18,7 @@ module Korma
         base_path = "posts/#{author}/"
 
         @author_url      = "http://#{DOMAIN}/#{base_path}"
-        @author          = AUTHORS[author]
+        @author          = Blog.author_names[author]
         @title           = entry_data[:title]
         @description     = entry_data[:description]
         @entry           = entry_data[:entry] 
@@ -38,7 +38,7 @@ module Korma
     end
 
     extend self 
-    attr_accessor :repository, :authors
+    attr_accessor :repository, :author_names
 
     def normalize_path(path)
       path.gsub(%r{/+},"/")
@@ -81,7 +81,7 @@ module Korma
     end
 
     def build_index(author)
-      entries_for_author(author).inject("<h2>Posts By <a href='/about/#{author}'>#{AUTHORS[author]}</a></h2>") do |s,e|
+      entries_for_author(author).inject("<h2>Posts By <a href='/about/#{author}'>#{Blog.author_names[author]}</a></h2>") do |s,e|
         s + "<p><a href='#{e.url}'>#{e.title}</a>: #{e.description}"
       end
     end
@@ -145,5 +145,5 @@ end
 
 configure do
   Korma::Blog.repository = Grit::Repo.new(ARGV[0])
-  Korma::Blog.authors    = YAML.load((Korma::Blog.repository / "authors.yml").data)
+  Korma::Blog.author_names    = YAML.load((Korma::Blog.repository.tree / "authors.yml").data)
 end
