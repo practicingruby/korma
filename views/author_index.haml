@@ -1,0 +1,15 @@
+%html
+  %body
+    %h2
+      %a{:href => "/about/#{@author}"}= Korma::Blog.author_names[@author]
+      's Posts
+
+    - @entries.each do |e|
+      %h3= e.title
+
+      %span= e.description
+
+      %p
+        %em
+          = "#{e.published_date.strftime("%Y-%m-%d %H:%M")}"
+          %a{:href => e.url} Continue Reading
