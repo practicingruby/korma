@@ -1,5 +1,10 @@
 %html
   %body
+    %h2 
+      All Posts (
+      %a{:href => "/feed.xml"} feed
+      )
+
     - @entries.each do |e|
       %h3= e.title
 

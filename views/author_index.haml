@@ -2,7 +2,9 @@
   %body
     %h2
       %a{:href => "/about/#{@author}"}= Korma::Blog.author_names[@author]
-      's Posts
+      's Posts (
+      %a{:href => "/feed/#{@author}.xml"} feed
+      )
 
     - @entries.each do |e|
       %h3= e.title
