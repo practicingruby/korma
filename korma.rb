@@ -126,7 +126,11 @@ get %r{^/(posts/.+)} do |path|
     @entries = Korma::Blog.entries_for_author(@author)
     haml :author_index
   else
-    RedCloth.new(Korma::Blog.parse_entry(node.data)[:entry]).to_html
+    @author = path[%r{posts/(.*)/.*},1]
+    @post = Korma::Blog::Entry.new(node, @author)
+    @contents = RedCloth.new(@post.entry).to_html
+
+    haml :post
   end
 end
 
