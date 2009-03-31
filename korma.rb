@@ -74,18 +74,6 @@ module Korma
       to_rss entries_for_author(author).sort { |a,b| b.published_date <=> a.published_date }     
     end
 
-    def build_site_index
-      all_entries.inject("") do |s,e|
-        s + "<p><a href='#{e.url}'>#{e.title}</a>: #{e.description} (<a href='#{e.author_url}'>#{e.author}</a>)"
-      end
-    end
-
-    def build_index(author)
-      entries_for_author(author).inject("<h2>Posts By <a href='/about/#{author}'>#{Blog.author_names[author]}</a></h2>") do |s,e|
-        s + "<p><a href='#{e.url}'>#{e.title}</a>: #{e.description}"
-      end
-    end
-
     def to_rss(entries)
       xml = Builder::XmlMarkup.new
       xml.instruct!
@@ -122,17 +110,21 @@ get "/feed.xml" do
 end
 
 get "/" do
-  Korma::Blog.build_site_index
+  @entries = Korma::Blog.all_entries
+  haml :index
 end
 
 get %r{^/posts/?$} do
-  Korma::Blog.build_site_index
+  @entries = Korma::Blog.all_entries
+  haml :index
 end
 
 get %r{^/(posts/.+)} do |path|
   node = (Korma::Blog.repository.tree / path)
   if Grit::Tree === node
-    Korma::Blog.build_index(path.sub("posts/","").delete("/"))
+    @author = path.sub("posts/","").delete("/")
+    @entries = Korma::Blog.entries_for_author(@author)
+    haml :author_index
   else
     RedCloth.new(Korma::Blog.parse_entry(node.data)[:entry]).to_html
   end
