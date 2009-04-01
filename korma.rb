@@ -1,14 +1,17 @@
 require 'rubygems'
-require 'sinatra'
 require 'grit'
 require 'redcloth'
 require "builder"
+require "fileutils"
+require "haml"
 
 module Korma
   module  Blog
 
+    include FileUtils
+
     TITLE  = "Ruby Best Practices"
-    DOMAIN = "localhost:4567"
+    DOMAIN = "blog.rubybestpractices.com"
     DESCRIPTION = "Not really implemented yet"
 
 
@@ -17,6 +20,7 @@ module Korma
         entry_data = Blog.parse_entry(blob.data)
         base_path = "posts/#{author}/"
 
+        @filename        = blob.name
         @author_url      = "http://#{DOMAIN}/#{base_path}"
         @author          = Blog.author_names[author]
         @title           = entry_data[:title]
@@ -26,7 +30,7 @@ module Korma
         @url             = "http://#{DOMAIN}/#{base_path}#{blob.name}"
       end
 
-      attr_reader :title, :description, :entry, :published_date, :url, :author_url, :author
+      attr_reader :title, :description, :entry, :published_date, :url, :author_url, :author, :filename 
 
       private
 
@@ -38,7 +42,7 @@ module Korma
     end
 
     extend self 
-    attr_accessor :repository, :author_names
+    attr_accessor :repository, :author_names,  :www_dir
 
     def normalize_path(path)
       path.gsub(%r{/+},"/")
@@ -61,7 +65,7 @@ module Korma
       entries.sort { |a,b| b.published_date <=> a.published_date }
     end
 
-    def build_site_feed
+    def site_feed
       to_rss(all_entries)
     end
 
@@ -70,8 +74,55 @@ module Korma
        tree.contents.map { |e| Entry.new(e, author)  }
     end
 
-    def build_feed(author)
+    def feed(author)
       to_rss entries_for_author(author).sort { |a,b| b.published_date <=> a.published_date }     
+    end
+
+    def author_index(author)
+      @author  = author
+      @entries = entries_for_author(author)
+      haml :author_index
+    end
+
+    def site_index
+      @entries = Korma::Blog.all_entries
+      haml :index
+    end
+
+    def bio(author)
+      node = (Korma::Blog.repository.tree / "about/#{author}")
+      RedCloth.new(node.data).to_html
+    end
+
+    def generate_static_files
+      mkdir_p www_dir
+      cd www_dir
+      write "feed.xml", site_feed
+      
+      write 'index.html', site_index
+
+      mkdir_p "feed"
+      mkdir_p "about"
+      authors.each do |author|
+        write "feed/#{author}.xml", feed(author)
+        mkdir_p "posts/#{author}"
+        write "posts/#{author}/index.html", author_index(author)
+        entries_for_author(author).each do |e|
+          @post = e
+          @contents = RedCloth.new(e.entry).to_html
+          write "posts/#{author}/#{e.filename}", haml(:post)
+        end
+        write "about/#{author}", bio(author)
+      end
+    end
+
+    def write(file, contents)
+      File.open(file, "w") { |f| f << contents }
+    end
+
+    def haml(file)
+      engine = Haml::Engine.new(File.read("../views/#{file}.haml"))
+      engine.render(binding)
     end
 
     def to_rss(entries)
@@ -101,45 +152,7 @@ module Korma
   end
 end
 
-get %r{^/feed/(.+).xml} do |author|
-  Korma::Blog.build_feed(author)
-end
-
-get "/feed.xml" do
-  Korma::Blog.build_site_feed
-end
-
-get "/" do
-  @entries = Korma::Blog.all_entries
-  haml :index
-end
-
-get %r{^/posts/?$} do
-  @entries = Korma::Blog.all_entries
-  haml :index
-end
-
-get %r{^/(posts/.+)} do |path|
-  node = (Korma::Blog.repository.tree / path)
-  if Grit::Tree === node
-    @author = path.sub("posts/","").delete("/")
-    @entries = Korma::Blog.entries_for_author(@author)
-    haml :author_index
-  else
-    @author = path[%r{posts/(.*)/.*},1]
-    @post = Korma::Blog::Entry.new(node, @author)
-    @contents = RedCloth.new(@post.entry).to_html
-
-    haml :post
-  end
-end
-
-get %r{^/(about/.*)} do |author|
-  node = (Korma::Blog.repository.tree / author)
-  RedCloth.new(node.data).to_html
-end
-
-configure do
-  Korma::Blog.repository = Grit::Repo.new(ARGV[0])
-  Korma::Blog.author_names    = YAML.load((Korma::Blog.repository.tree / "authors.yml").data)
-end
+Korma::Blog.repository   = Grit::Repo.new(ARGV[0])
+Korma::Blog.author_names = YAML.load((Korma::Blog.repository.tree / "authors.yml").data)
+Korma::Blog.www_dir  = ARGV[1] || "www"
+Korma::Blog.generate_static_files
