@@ -5,6 +5,8 @@ require "builder"
 require "fileutils"
 require "haml"
 
+KORMA_DIR = File.expand_path(File.dirname(__FILE__))
+
 module Korma
   module  Blog
 
@@ -20,14 +22,14 @@ module Korma
         entry_data = Blog.parse_entry(blob.data)
         base_path = "posts/#{author}/"
 
-        @filename        = blob.name
+        @filename        = "#{blob.name}.html"
         @author_url      = "http://#{DOMAIN}/#{base_path}"
         @author          = Blog.author_names[author]
         @title           = entry_data[:title]
         @description     = entry_data[:description]
         @entry           = entry_data[:entry] 
         @published_date  = commit_date(blob, base_path)
-        @url             = "http://#{DOMAIN}/#{base_path}#{blob.name}"
+        @url             = "http://#{DOMAIN}/#{base_path}#{@filename}"
       end
 
       attr_reader :title, :description, :entry, :published_date, :url, :author_url, :author, :filename 
@@ -91,7 +93,8 @@ module Korma
 
     def bio(author)
       node = (Korma::Blog.repository.tree / "about/#{author}")
-      RedCloth.new(node.data).to_html
+
+      "<html><body>#{RedCloth.new(node.data).to_html}</body></html>"
     end
 
     def generate_static_files
@@ -112,7 +115,7 @@ module Korma
           @contents = RedCloth.new(e.entry).to_html
           write "posts/#{author}/#{e.filename}", haml(:post)
         end
-        write "about/#{author}", bio(author)
+        write "about/#{author}.html", bio(author)
       end
     end
 
@@ -121,7 +124,7 @@ module Korma
     end
 
     def haml(file)
-      engine = Haml::Engine.new(File.read("../views/#{file}.haml"))
+      engine = Haml::Engine.new(File.read("#{KORMA_DIR}/views/#{file}.haml"))
       engine.render(binding)
     end
 
