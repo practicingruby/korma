@@ -12,24 +12,19 @@ module Korma
 
     include FileUtils
 
-    TITLE  = "Ruby Best Practices"
-    DOMAIN = "blog.rubybestpractices.com"
-    DESCRIPTION = "Not really implemented yet"
-
-
     class Entry 
       def initialize(blob, author="")
         entry_data = Blog.parse_entry(blob.data)
         base_path = "posts/#{author}/"
 
         @filename        = "#{blob.name}.html"
-        @author_url      = "http://#{DOMAIN}/#{base_path}"
+        @author_url      = "http://#{Korma::Blog.domain}/#{base_path}"
         @author          = Blog.author_names[author]
         @title           = entry_data[:title]
         @description     = entry_data[:description]
         @entry           = entry_data[:entry] 
         @published_date  = commit_date(blob, base_path)
-        @url             = "http://#{DOMAIN}/#{base_path}#{@filename}"
+        @url             = "http://#{Korma::Blog.domain}/#{base_path}#{@filename}"
       end
 
       attr_reader :title, :description, :entry, :published_date, :url, :author_url, :author, :filename 
@@ -44,7 +39,7 @@ module Korma
     end
 
     extend self 
-    attr_accessor :repository, :author_names,  :www_dir
+    attr_accessor :repository, :author_names,  :www_dir, :title, :domain, :description
 
     def normalize_path(path)
       path.gsub(%r{/+},"/")
@@ -133,9 +128,9 @@ module Korma
       xml.instruct!
       xml.rss :version => "2.0" do
         xml.channel do
-          xml.title       TITLE
-          xml.link        "http://#{DOMAIN}/"
-          xml.description  DESCRIPTION
+          xml.title       title
+          xml.link        "http://#{domain}/"
+          xml.description  description
           xml.language    "en-us"
 
           entries.each do |entry|
@@ -156,6 +151,11 @@ module Korma
 end
 
 Korma::Blog.repository   = Grit::Repo.new(ARGV[0])
-Korma::Blog.author_names = YAML.load((Korma::Blog.repository.tree / "authors.yml").data)
+config =  YAML.load((Korma::Blog.repository.tree / "korma_config.yml").data)
+
+Korma::Blog.title  = config['title']
+Korma::Blog.domain = config['domain']
+Korma::Blog.description = config['description']
+Korma::Blog.author_names = config['authors']
 Korma::Blog.www_dir  = ARGV[1] || "www"
 Korma::Blog.generate_static_files
