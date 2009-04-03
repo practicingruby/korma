@@ -82,7 +82,7 @@ module Korma
 
     def author_index(author)
       @author  = author
-      @entries = entries_for_author(author)
+      @entries = entries_for_author(author).sort { |a,b| b.published_date <=> a.published_date }
       haml :author_index
     end
 
