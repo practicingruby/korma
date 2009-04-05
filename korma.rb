@@ -125,7 +125,7 @@ module Korma
           write "posts/#{author}/#{e.filename}", haml(:post)
         end
         write "about/#{author}.html", bio(author)
-        write repository.tree
+        update_stylesheet
       end
     end
 
