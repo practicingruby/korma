@@ -92,6 +92,20 @@ module Korma
       "<html><body>#{RedCloth.new(node.data).to_html}</body></html>"
     end
 
+    def update_stylesheet
+      if css = repository.tree / "styles.css"
+        write "styles.css", css.data
+      end
+    end
+
+    def layout
+      if layout = repository.tree / "layout.haml"
+        Haml::Engine.new(layout.data).render(binding)
+      else
+        yield
+      end
+    end
+
     def generate_static_files
       mkdir_p www_dir
       cd www_dir
@@ -111,6 +125,7 @@ module Korma
           write "posts/#{author}/#{e.filename}", haml(:post)
         end
         write "about/#{author}.html", bio(author)
+        write repository.tree
       end
     end
 
@@ -120,7 +135,7 @@ module Korma
 
     def haml(file)
       engine = Haml::Engine.new(File.read("#{KORMA_DIR}/views/#{file}.haml"))
-      engine.render(binding)
+      layout { engine.render(binding) }
     end
 
     def to_rss(entries)
