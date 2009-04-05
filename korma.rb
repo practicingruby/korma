@@ -118,7 +118,7 @@ module Korma
       mkdir_p "about"
 
       if about = repository.tree / "about/index"
-        write "about/index.html", RedCloth.new(about.data).to_html
+        write "about/index.html", layout { RedCloth.new(about.data).to_html }
       end
 
       update_stylesheet
