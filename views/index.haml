@@ -4,6 +4,7 @@
   )
 
 - @entries.each do |e|
+  %hr
   %h3= e.title
 
   %span= e.description
@@ -15,5 +16,3 @@
 
   %p
     %a{:href => e.url} Continue Reading
-
-  %hr
