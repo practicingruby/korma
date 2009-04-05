@@ -4,6 +4,7 @@ require 'redcloth'
 require "builder"
 require "fileutils"
 require "haml"
+require "erb"
 
 KORMA_DIR = File.expand_path(File.dirname(__FILE__))
 
@@ -51,7 +52,7 @@ module Korma
     end
 
     def authors
-      (repository.tree / "posts/").contents.map { |e| e.name }  
+      (repository.tree / "posts/").contents.map { |e| e.name }
     end
 
     def all_entries
@@ -87,6 +88,7 @@ module Korma
     end
 
     def bio(author)
+      p author
       node = (Korma::Blog.repository.tree / "about/#{author}")
 
       "<html><body>#{RedCloth.new(node.data).to_html}</body></html>"
