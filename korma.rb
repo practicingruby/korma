@@ -88,10 +88,9 @@ module Korma
     end
 
     def bio(author)
-      p author
       node = (Korma::Blog.repository.tree / "about/#{author}")
 
-      "<html><body>#{RedCloth.new(node.data).to_html}</body></html>"
+      layout { RedCloth.new(node.data).to_html }
     end
 
     def update_stylesheet
@@ -118,8 +117,8 @@ module Korma
       mkdir_p "feed"
       mkdir_p "about"
 
-      if about = repository.tree / "about/index.html"
-        write "about/index.html", about.data
+      if about = repository.tree / "about/index"
+        write "about/index.html", RedCloth.new(about.data).to_html
       end
 
       update_stylesheet
