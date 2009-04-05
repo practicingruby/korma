@@ -1,8 +1,6 @@
-%html
-  %body
-    %h2= @post.title
-    %em
-      = "#{@post.published_date.strftime("%Y-%m-%d %H:%M")} by "
-      %a{:href =>@post.author_url}= @post.author 
-    = @contents
-    %p
+%h2= @post.title
+%em
+  = "#{@post.published_date.strftime("%Y-%m-%d %H:%M")} by "
+  %a{:href =>@post.author_url}= @post.author 
+= @contents
+%p

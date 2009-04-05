@@ -1,21 +1,19 @@
-%html
-  %body
-    %h2 
-      All Posts (
-      %a{:href => "/feed.xml"} feed
-      )
+%h2 
+  All Posts (
+  %a{:href => "/feed.xml"} feed
+  )
 
-    - @entries.each do |e|
-      %h3= e.title
+- @entries.each do |e|
+  %h3= e.title
 
-      %span= e.description
+  %span= e.description
 
-      %p
-        %em
-          = "#{e.published_date.strftime("%Y-%m-%d %H:%M")} by "
-          %a{:href =>e.author_url}= e.author 
+  %p
+    %em
+      = "#{e.published_date.strftime("%Y-%m-%d %H:%M")} by "
+      %a{:href =>e.author_url}= e.author 
 
-      %p
-        %a{:href => e.url} Continue Reading
+  %p
+    %a{:href => e.url} Continue Reading
 
-      %hr
+  %hr

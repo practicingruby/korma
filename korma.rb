@@ -99,8 +99,8 @@ module Korma
     end
 
     def layout
-      if layout = repository.tree / "layout.haml"
-        Haml::Engine.new(layout.data).render(binding)
+      if layout = repository.tree / "layout.erb"
+        ERB.new(layout.data).result(binding)
       else
         yield
       end
