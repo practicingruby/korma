@@ -115,6 +115,13 @@ module Korma
 
       mkdir_p "feed"
       mkdir_p "about"
+
+      if about = repository.tree / "about/index.html"
+        write "about/index.html", about.data
+      end
+
+      update_stylesheet
+
       authors.each do |author|
         write "feed/#{author}.xml", feed(author)
         mkdir_p "posts/#{author}"
@@ -125,8 +132,8 @@ module Korma
           write "posts/#{author}/#{e.filename}", haml(:post)
         end
         write "about/#{author}.html", bio(author)
-        update_stylesheet
       end
+
     end
 
     def write(file, contents)
