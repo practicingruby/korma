@@ -1,0 +1,12 @@
+<h1> <a href = "/about/<%= @author%>.html" ></a><%= Korma::Blog.author_names[@author] %>'s Posts ( <a href = "/feed/<%= @author %>.xml" >feed</a>) </h1>
+
+
+<% @entries.each do |e| %>
+<h3><%= e.title %></h3>
+
+<span><%= e.description %></span>
+
+<p>
+<em><%= e.published_date.strftime("%Y-%m-%d %H:%M") %> <a href = '<%= e.url%>' >Continue Reading</a></em>
+</p>
+<% end %>

@@ -1,0 +1,11 @@
+<h2>All Posts! (<a href = "/feed.xml">feed</a>) </h2>
+
+<% @entries.each do |e| %>
+
+  <hr/> 
+  <h3><%= e.title %></h3>
+  <span><%= e.description %></span>
+  <p> <em> <%= e.published_date.strftime("%Y-%m-%d %H:%M") %> by  <a href= '<%= e.author_url %>'><%= e.author  %></a></em> </p>
+  <p><a href='<%= e.url %>' > Continue Reading</a></p>
+
+<% end %>
