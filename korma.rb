@@ -62,7 +62,7 @@ module Korma
       end
 
       def gravatar(size=80)
-        "http://www.gravatar.com/avatar/#{MD5.hexdigest(email)}?s=80"
+        "http://www.gravatar.com/avatar/#{MD5.hexdigest(email)}?s=#{size}"
       end
 
     end
