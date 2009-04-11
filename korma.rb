@@ -75,7 +75,7 @@ module Korma
       @authors = {}
 
       data.each do |k,v|
-        @authors[k] = Author.new(k, v[:name], v[:email])
+        @authors[k] = Author.new(k, v['name'], v['email'])
       end
     end
 
