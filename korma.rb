@@ -126,6 +126,7 @@ module Korma
     end
 
     def bio(author)
+      @author = Korma::Blog.authors[author]
       node = (Korma::Blog.repository.tree / "about/#{author}")
 
       layout { RedCloth.new(node.data).to_html }
