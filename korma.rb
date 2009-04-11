@@ -4,6 +4,7 @@ require 'redcloth'
 require "builder"
 require "fileutils"
 require "erb"
+require "md5"
 
 KORMA_DIR = File.expand_path(File.dirname(__FILE__))
 
@@ -15,19 +16,17 @@ module Korma
     class Entry 
       def initialize(blob, author="")
         entry_data = Blog.parse_entry(blob.data)
-        base_path = "posts/#{author}/"
 
         @filename        = "#{blob.name}.html"
-        @author_url      = "http://#{Korma::Blog.domain}/#{base_path}"
-        @author          = Blog.author_names[author]
+        @author          = Blog.authors[author]
         @title           = entry_data[:title]
         @description     = entry_data[:description]
         @entry           = entry_data[:entry] 
         @published_date  = commit_date(blob, base_path)
-        @url             = "http://#{Korma::Blog.domain}/#{base_path}#{@filename}"
+        @url             = "/#{@author.base_uri}#{@filename}"
       end
 
-      attr_reader :title, :description, :entry, :published_date, :url, :author_url, :author, :filename 
+      attr_reader :title, :description, :entry, :published_date, :url, :author, :filename 
 
       private
 
@@ -38,8 +37,39 @@ module Korma
 
     end
 
+    class Author
+
+      def initialize(account, name, email)
+        @account, @name, @email = account, name, email
+      end
+     
+      attr_reader :account, :name, :email
+
+      def base_uri
+        "/posts/#{account}"
+      end
+
+      def feed_uri
+        "/feed/#{account}.xml"
+      end
+
+      def gravatar(size=80)
+        "http://www.gravatar.com/avatar/#{MD5.hexdigest(email)}?s=80"
+      end
+
+    end
+
     extend self 
-    attr_accessor :repository, :author_names,  :www_dir, :title, :domain, :description
+    attr_accessor :repository, :www_dir, :title, :domain, :description
+    attr_reader :authors
+
+    def authors=(data)
+      @authors = {}
+
+      data.each do |k,v|
+        @authors[k] = Authors.new(k, v[:name], v[:email])
+      end
+    end
 
     def normalize_path(path)
       path.gsub(%r{/+},"/")
@@ -50,13 +80,13 @@ module Korma
       { :title => $1.strip, :description => $2.strip, :entry => $3.strip }
     end
 
-    def authors
-      (repository.tree / "posts/").contents.map { |e| e.name }
+    def author_names
+      authors.keys
     end
 
     def all_entries
       entries = []
-      authors.each do |a|
+      author_names.each do |a|
         entries += entries_for_author(a)
       end
       entries.sort { |a,b| b.published_date <=> a.published_date }
@@ -67,8 +97,9 @@ module Korma
     end
 
     def entries_for_author(author)
-       tree = repository.tree / "posts/#{author}"
-       tree.contents.map { |e| Entry.new(e, author)  }
+      tree = repository.tree / "posts/#{author}"
+      return [] unless tree
+      tree.contents.map { |e| Entry.new(e, author)  } 
     end
 
     def feed(author)
@@ -76,7 +107,7 @@ module Korma
     end
 
     def author_index(author)
-      @author  = author
+      @author  = authors[author]
       @entries = entries_for_author(author).sort { |a,b| b.published_date <=> a.published_date }
       erb :author_index
     end
@@ -122,12 +153,13 @@ module Korma
 
       update_stylesheet
 
-      authors.each do |author|
+      author_names.each do |author|
         write "feed/#{author}.xml", feed(author)
         mkdir_p "posts/#{author}"
         write "posts/#{author}/index.html", author_index(author)
         entries_for_author(author).each do |e|
           @post = e
+          @author  = authors[author]
           @contents = RedCloth.new(e.entry).to_html
           write "posts/#{author}/#{e.filename}", erb(:post)
         end
@@ -163,7 +195,7 @@ module Korma
             xml.item do
               xml.title       entry.title
               xml.description entry.description
-              xml.author      "#{entry.author} via rubybestpractices.com"
+              xml.author      "#{entry.author.name} via rubybestpractices.com"
               xml.pubDate     entry.published_date
               xml.link        entry.url
               xml.guid        entry.url
@@ -182,6 +214,6 @@ config =  YAML.load((Korma::Blog.repository.tree / "korma_config.yml").data)
 Korma::Blog.title  = config['title']
 Korma::Blog.domain = config['domain']
 Korma::Blog.description = config['description']
-Korma::Blog.author_names = config['authors']
+Korma::Blog.authors = config['authors']
 Korma::Blog.www_dir  = ARGV[1] || "www"
 Korma::Blog.generate_static_files
