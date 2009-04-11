@@ -3,7 +3,6 @@ require 'grit'
 require 'redcloth'
 require "builder"
 require "fileutils"
-require "haml"
 require "erb"
 
 KORMA_DIR = File.expand_path(File.dirname(__FILE__))
@@ -79,12 +78,12 @@ module Korma
     def author_index(author)
       @author  = author
       @entries = entries_for_author(author).sort { |a,b| b.published_date <=> a.published_date }
-      haml :author_index
+      erb :author_index
     end
 
     def site_index
       @entries = Korma::Blog.all_entries
-      haml :index
+      erb :index
     end
 
     def bio(author)
@@ -130,7 +129,7 @@ module Korma
         entries_for_author(author).each do |e|
           @post = e
           @contents = RedCloth.new(e.entry).to_html
-          write "posts/#{author}/#{e.filename}", haml(:post)
+          write "posts/#{author}/#{e.filename}", erb(:post)
         end
         write "about/#{author}.html", bio(author)
       end
@@ -141,9 +140,9 @@ module Korma
       File.open(file, "w") { |f| f << contents }
     end
 
-    def haml(file)
-      engine = Haml::Engine.new(File.read("#{KORMA_DIR}/views/#{file}.haml"))
-      layout { engine.render(binding) }
+    def erb(file)
+      engine = ERB.new(File.read("#{KORMA_DIR}/views/#{file}.erb"))
+      layout { engine.result(binding) }
     end
 
     def to_rss(entries)
