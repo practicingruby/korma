@@ -141,8 +141,12 @@ module Korma
     end
 
     def erb(file)
-      engine = ERB.new(File.read("#{KORMA_DIR}/views/#{file}.erb"))
-      layout { engine.result(binding) }
+      if blob = repository.tree / "views/#{file}.erb"
+        engine = ERB.new(blob.data)
+        layout { engine.result(binding) }
+      else
+        raise "File not found #{file}.erb"
+      end
     end
 
     def to_rss(entries)
