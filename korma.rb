@@ -22,8 +22,8 @@ module Korma
         @title           = entry_data[:title]
         @description     = entry_data[:description]
         @entry           = entry_data[:entry] 
-        @published_date  = commit_date(blob, base_path)
-        @url             = "/#{@author.base_uri}#{@filename}"
+        @published_date  = commit_date(blob, @author.base_path)
+        @url             = "/#{@author.base_path}#{@filename}"
       end
 
       attr_reader :title, :description, :entry, :published_date, :url, :author, :filename 
@@ -45,8 +45,16 @@ module Korma
      
       attr_reader :account, :name, :email
 
-      def base_uri
-        "/posts/#{account}"
+      def base_path
+        "posts/#{account}/"
+      end
+
+      def index_uri
+        "/#{base_path}"
+      end
+
+      def bio_uri
+        "/about/#{account}.html"
       end
 
       def feed_uri
@@ -67,7 +75,7 @@ module Korma
       @authors = {}
 
       data.each do |k,v|
-        @authors[k] = Authors.new(k, v[:name], v[:email])
+        @authors[k] = Author.new(k, v[:name], v[:email])
       end
     end
 
