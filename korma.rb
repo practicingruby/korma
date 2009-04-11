@@ -129,7 +129,7 @@ module Korma
       @author = Korma::Blog.authors[author]
       node = (Korma::Blog.repository.tree / "about/#{author}")
 
-      layout { RedCloth.new(node.data).to_html }
+      layout { RedCloth.new(ERB.new(node.data).result(binding)).to_html }
     end
 
     def update_stylesheet
