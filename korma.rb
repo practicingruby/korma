@@ -4,7 +4,14 @@ require 'redcloth'
 require "builder"
 require "fileutils"
 require "erb"
-require "md5"
+
+begin
+  require "md5"
+rescue LoadError
+  # fix for 1.9.1p0
+  require 'digest/md5'
+  ::MD5 = ::Digest::MD5
+end
 
 KORMA_DIR = File.expand_path(File.dirname(__FILE__))
 
