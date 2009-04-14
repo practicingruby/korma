@@ -203,7 +203,7 @@ module Korma
           entries.each do |entry|
             xml.item do
               xml.title       entry.title.gsub( %r{</?[^>]+?>}, '' )
-              xml.description entry.description
+              xml.description  RedCloth.new(entry.entry).to_html
               xml.author      "#{entry.author.email} (#{entry.author.name})"
               xml.pubDate     entry.published_date.rfc822
               xml.link        "http://#{domain}#{entry.url}"
