@@ -4,7 +4,7 @@ require 'redcloth'
 require "builder"
 require "fileutils"
 require "erb"
-require "md5"
+require 'digest/md5'
 
 KORMA_DIR = File.expand_path(File.dirname(__FILE__))
 
@@ -62,7 +62,7 @@ module Korma
       end
 
       def gravatar(size=80)
-        "http://www.gravatar.com/avatar/#{MD5.hexdigest(email)}?s=#{size}"
+        "http://www.gravatar.com/avatar/#{Digest::MD5.hexdigest(email)}?s=#{size}"
       end
 
     end
