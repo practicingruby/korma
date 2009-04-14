@@ -206,8 +206,8 @@ module Korma
               xml.description entry.description
               xml.author      "#{entry.author.name} via rubybestpractices.com"
               xml.pubDate     entry.published_date
-              xml.link        entry.url
-              xml.guid        entry.url
+              xml.link        "http://#{domain}#{entry.url}"
+              xml.guid        "http://#{domain}#{entry.url}"
             end
           end
         end
