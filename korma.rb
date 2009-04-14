@@ -204,7 +204,7 @@ module Korma
             xml.item do
               xml.title       entry.title.gsub( %r{</?[^>]+?>}, '' )
               xml.description entry.description
-              xml.author      "#{entry.author.name} via rubybestpractices.com"
+              xml.author      "#{entry.author.name} <#{entry.author.email}>"
               xml.pubDate     entry.published_date
               xml.link        "http://#{domain}#{entry.url}"
               xml.guid        "http://#{domain}#{entry.url}"
