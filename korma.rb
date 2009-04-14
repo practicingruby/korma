@@ -202,7 +202,7 @@ module Korma
 
           entries.each do |entry|
             xml.item do
-              xml.title       entry.title
+              xml.title       entry.title.gsub( %r{</?[^>]+?>}, '' )
               xml.description entry.description
               xml.author      "#{entry.author.name} via rubybestpractices.com"
               xml.pubDate     entry.published_date
