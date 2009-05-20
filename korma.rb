@@ -23,7 +23,7 @@ module Korma
         @title           = entry_data[:title]
         @description     = entry_data[:description]
         @entry           = entry_data[:entry] 
-        @published_date  = Time.now #entry_data[:timestamp]
+        @published_date  = entry_data[:timestamp]
         @url             = "/#{@author.base_path}#{@filename}"
       end
 
@@ -46,7 +46,7 @@ module Korma
       end
 
       def index_uri
-        "/#{base_path}"
+        "/#{base_path}index.html"
       end
 
       def bio_uri
@@ -80,8 +80,9 @@ module Korma
     end
     
     def parse_entry(entry)
-      entry =~ /=title(.*)=description(.*)=entry(.*)/m   
-      { :title => $1.strip, :description => $2.strip, :entry => $3.strip }
+      entry =~ /=title(.*)=timestamp(.*)=description(.*)=entry(.*)/m   
+      { :title => $1.strip, :description => $3.strip, 
+        :entry => $4.strip, :timestamp => Time.parse($2) }
     end
 
     def author_names
