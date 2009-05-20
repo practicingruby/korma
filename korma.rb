@@ -1,10 +1,11 @@
 require 'rubygems'
-require 'grit'
 require 'redcloth'
 require "builder"
 require "fileutils"
 require "erb"
 require 'digest/md5'
+require "pathname"
+require "time"
 
 KORMA_DIR = File.expand_path(File.dirname(__FILE__))
 
@@ -14,26 +15,21 @@ module Korma
     include FileUtils
 
     class Entry 
-      def initialize(blob, author="")
-        entry_data = Blog.parse_entry(blob.data)
+      def initialize(file, author="")
+        entry_data = Blog.parse_entry(file.read)
 
-        @filename        = "#{blob.name}.html"
+        @filename        = "#{file.basename}.html"
         @author          = Blog.authors[author]
         @title           = entry_data[:title]
         @description     = entry_data[:description]
         @entry           = entry_data[:entry] 
-        @published_date  = commit_date(blob, @author.base_path)
+        @published_date  = Time.now #entry_data[:timestamp]
         @url             = "/#{@author.base_path}#{@filename}"
       end
 
       attr_reader :title, :description, :entry, :published_date, :url, :author, :filename 
 
       private
-
-      def commit_date(blob, base_path)
-        repo = Korma::Blog.repository
-        Grit::Blob.blame(repo, repo.head.commit, "#{base_path}#{blob.name}")[0][0].date
-      end
 
     end
 
@@ -105,9 +101,9 @@ module Korma
     end
 
     def entries_for_author(author)
-      tree = repository.tree / "posts/#{author}"
+      tree = Pathname.glob "#{repository}posts/#{author}/*"
       return [] unless tree
-      tree.contents.map { |e| Entry.new(e, author)  } 
+      tree.map { |e| Entry.new(e, author)  } 
     end
 
     def feed(author)
@@ -127,20 +123,24 @@ module Korma
 
     def bio(author)
       @author = Korma::Blog.authors[author]
-      node = (Korma::Blog.repository.tree / "about/#{author}")
+      file = repository + "about/#{author}"
 
-      layout { RedCloth.new(ERB.new(node.data).result(binding)).to_html }
+      layout { RedCloth.new(ERB.new(file.read).result(binding)).to_html }
     end
 
     def update_stylesheet
-      if css = repository.tree / "styles.css"
-        write "styles.css", css.data
+      file = repository + "styles.css"
+
+      if file.exist?
+        write "styles.css", file.read
       end
     end
 
     def layout
-      if layout = repository.tree / "layout.erb"
-        ERB.new(layout.data).result(binding)
+      file = repository + "layout.erb"
+
+      if file.exist?
+        ERB.new(file.read).result(binding)
       else
         yield
       end
@@ -156,8 +156,10 @@ module Korma
       mkdir_p "feed"
       mkdir_p "about"
 
-      if about = repository.tree / "about/index"
-        write "about/index.html", layout { RedCloth.new(about.data).to_html }
+      about = repository + "about/index"
+
+      if about.exist?
+        write "about/index.html", layout { RedCloth.new(about.read).to_html }
       end
 
       update_stylesheet
@@ -182,8 +184,10 @@ module Korma
     end
 
     def erb(file)
-      if blob = repository.tree / "views/#{file}.erb"
-        engine = ERB.new(blob.data)
+      file = repository + "views/#{file}.erb"
+      
+      if file.exist?
+        engine = ERB.new(file.read)
         layout { engine.result(binding) }
       else
         raise "File not found #{file}.erb"
@@ -217,12 +221,13 @@ module Korma
   end
 end
 
-Korma::Blog.repository   = Grit::Repo.new(ARGV[0])
-config =  YAML.load((Korma::Blog.repository.tree / "korma_config.yml").data)
+Korma::Blog.repository   = Pathname.new(ARGV[0])
+config =  YAML.load((Korma::Blog.repository + "korma_config.yml").read)
 
 Korma::Blog.title  = config['title']
 Korma::Blog.domain = config['domain']
 Korma::Blog.description = config['description']
 Korma::Blog.authors = config['authors']
 Korma::Blog.www_dir  = ARGV[1] || "www"
+
 Korma::Blog.generate_static_files
