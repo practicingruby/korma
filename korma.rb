@@ -149,7 +149,7 @@ module Korma
 
     def generate_static_files
       # fix relative path names
-      self.repository = File.absolute_path(repository) + "/"
+      self.repository = repository.realpath unless repository.absolute?
 
       mkdir_p www_dir
       cd www_dir
