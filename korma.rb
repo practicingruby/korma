@@ -92,9 +92,9 @@ module Korma
     def all_entries
       entries = []
       author_names.each do |a|
-        entries += entries_for_author(a)
+        entries.concat entries_for_author(a)
       end
-      entries.sort { |a,b| b.published_date <=> a.published_date }
+      entries.sort! { |a,b| b.published_date <=> a.published_date }
     end
 
     def site_feed
@@ -102,9 +102,9 @@ module Korma
     end
 
     def entries_for_author(author)
-      tree = Pathname.glob "#{repository}posts/#{author}/*"
+      tree = Pathname.glob "#{repository}/posts/#{author}/*"
       return [] unless tree
-      tree.map { |e| Entry.new(e, author)  } 
+      tree.select { |e| e.file? }.map { |e| Entry.new(e, author)  } 
     end
 
     def feed(author)
