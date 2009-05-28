@@ -148,6 +148,9 @@ module Korma
     end
 
     def generate_static_files
+      # fix relative path names
+      self.repository = File.absolute_path(repository) + "/"
+
       mkdir_p www_dir
       cd www_dir
       write "feed.xml", site_feed
@@ -187,11 +190,11 @@ module Korma
     def erb(file)
       file = repository + "views/#{file}.erb"
       
-      if file.exist?
+      if File.exist? file
         engine = ERB.new(file.read)
         layout { engine.result(binding) }
       else
-        raise "File not found #{file}.erb"
+        raise "File not found #{file}"
       end
     end
 
