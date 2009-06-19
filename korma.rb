@@ -36,7 +36,7 @@ module Korma
     class Author
 
       def initialize(account, name, email, guest)
-        @account, @name, @email, @contributor = account, name, email, guest
+        @account, @name, @email, @guest = account, name, email, guest
       end
      
       attr_reader :account, :name, :email, :guest
