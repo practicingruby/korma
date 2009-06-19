@@ -92,9 +92,9 @@ module Korma
     def all_entries
       entries = []
       author_names.each do |a|
-        entries += entries_for_author(a)
+        entries.concat entries_for_author(a)
       end
-      entries.sort { |a,b| b.published_date <=> a.published_date }
+      entries.sort! { |a,b| b.published_date <=> a.published_date }
     end
 
     def site_feed
@@ -102,9 +102,9 @@ module Korma
     end
 
     def entries_for_author(author)
-      tree = Pathname.glob "#{repository}posts/#{author}/*"
+      tree = Pathname.glob "#{repository}/posts/#{author}/*"
       return [] unless tree
-      tree.map { |e| Entry.new(e, author)  } 
+      tree.select { |e| e.file? }.map { |e| Entry.new(e, author)  } 
     end
 
     def feed(author)
@@ -148,6 +148,9 @@ module Korma
     end
 
     def generate_static_files
+      # fix relative path names
+      self.repository = repository.realpath unless repository.absolute?
+
       mkdir_p www_dir
       cd www_dir
       write "feed.xml", site_feed
@@ -187,11 +190,11 @@ module Korma
     def erb(file)
       file = repository + "views/#{file}.erb"
       
-      if file.exist?
+      if File.exist? file
         engine = ERB.new(file.read)
         layout { engine.result(binding) }
       else
-        raise "File not found #{file}.erb"
+        raise "File not found #{file}"
       end
     end
 
