@@ -39,7 +39,7 @@ module Korma
         @account, @name, @email, @contributor = account, name, email, guest
       end
      
-      attr_reader :account, :name, :email
+      attr_reader :account, :name, :email, :guest
 
       def base_path
         "posts/#{account}/"
