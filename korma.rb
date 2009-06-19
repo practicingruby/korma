@@ -35,8 +35,8 @@ module Korma
 
     class Author
 
-      def initialize(account, name, email, contributor)
-        @account, @name, @email, @contributor = account, name, email, contributor
+      def initialize(account, name, email, guest)
+        @account, @name, @email, @contributor = account, name, email, guest
       end
      
       attr_reader :account, :name, :email
@@ -71,7 +71,7 @@ module Korma
       @authors = {}
 
       data.each do |k,v|
-        @authors[k] = Author.new(k, v['name'], v['email'], v['contributor'])
+        @authors[k] = Author.new(k, v['name'], v['email'], v['guest'])
       end
     end
 
